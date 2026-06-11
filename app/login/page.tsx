@@ -18,15 +18,7 @@ export default function LoginPage() {
 
       {/* Contenido */}
       <main className="relative z-10 flex items-center justify-center p-6 min-h-[calc(100vh-80px)]">
-        <div className="card lg:card-side bg-base-100/90 backdrop-blur-md shadow-2xl w-full max-w-6xl overflow-hidden">
-
-          {/* Left Side */}
-          <div className="bg-neutral text-neutral-content lg:w-1/2 p-10 flex flex-col justify-between">
-
-            <div>
-              <div className="avatar placeholder mb-6">
-                    <div className="fixed inset-0 z-0 pointer-events-none">
-        <MagicRings
+              <MagicRings
           color="#A855F7"
           colorTwo="#6366F1"
           ringCount={6}
@@ -49,8 +41,19 @@ export default function LoginPage() {
           parallax={0.05}
           clickBurst={false}
         />
+        <div className="card lg:card-side bg-base-/50 backdrop-blur-md shadow-2xl w-full max-w-6xl overflow-hidden">
+
+          {/* Left Side */}
+          <div className=" bg-base-100/50 text-neutral-content lg:w-1/2 p-10 flex flex-col justify-between">
+          
+            <div>
+
+              <div className="avatar placeholder mb-6">
+                    <div className="fixed inset-0 z-0 pointer-events-none">
+       
       </div>
                 <div className="bg-primary text-primary-content rounded-xl w-14">
+            
                   <span className="text-xl font-bold">
                     RR
                   </span>
