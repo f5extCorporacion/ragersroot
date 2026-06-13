@@ -3,9 +3,13 @@
 import { FaGithub, FaGoogle } from "react-icons/fa";
 import HeaderMenu from "../header";
 import MagicRings from "../component/MagicRings";
+import { signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
-  return (
+    const { data: session } = useSession();
+
+  if (!session) return (
     <div className="relative min-h-screen bg-base-200">
 
       {/* Fondo */}
@@ -52,16 +56,17 @@ export default function LoginPage() {
                     <div className="fixed inset-0 z-0 pointer-events-none">
        
       </div>
-                <div className="bg-primary text-primary-content rounded-xl w-14">
+                <div className="bg-primary-100/50 text-primary-content rounded-xl w-14">
             
                   <span className="text-xl font-bold">
-                    RR
+                RR
                   </span>
                 </div>
               </div>
 
               <h1 className="text-4xl font-bold leading-tight">
-                Build better products with your data
+               
+      
               </h1>
 
               <p className="mt-4 opacity-80">
@@ -101,12 +106,9 @@ export default function LoginPage() {
               </p>
 
               <div className="grid gap-3 mt-8">
-                <button className="btn btn-outline">
-                  <FaGithub />
-                  Continue with GitHub
-                </button>
-
-                <button className="btn btn-outline">
+                
+                <button className="btn btn-outline" 
+                onClick={() => signIn("google")}>
                   <FaGoogle />
                   Continue with Google
                 </button>
