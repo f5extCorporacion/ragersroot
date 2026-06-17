@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { FaGithub, FaGoogle } from "react-icons/fa";
 import HeaderMenu from "../header";
 import MagicRings from "../component/MagicRings";
@@ -8,6 +9,33 @@ import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
     const { data: session } = useSession();
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleEmailLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setIsSubmitting(true);
+
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      setIsSubmitting(false);
+
+      if (!res || res.error) {
+        setError("Email o contraseña incorrectos");
+        return;
+      }
+
+      // Sesión creada correctamente. El AuthProvider (AuthContext) redirige
+      // a /dashboard automáticamente cuando detecta `authenticated === true`.
+    };
 
   if (!session) return (
     <div className="relative min-h-screen bg-base-200">
@@ -118,7 +146,13 @@ export default function LoginPage() {
                 OR CONTINUE WITH EMAIL
               </div>
 
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleEmailLogin}>
+
+                {error && (
+                  <div className="alert alert-error text-sm py-2">
+                    {error}
+                  </div>
+                )}
 
                 <div>
                   <label className="label">
@@ -131,6 +165,9 @@ export default function LoginPage() {
                     type="email"
                     placeholder="correo@empresa.com"
                     className="input input-bordered w-full"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -145,6 +182,9 @@ export default function LoginPage() {
                     type="password"
                     placeholder="********"
                     className="input input-bordered w-full"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -172,8 +212,9 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   className="btn btn-primary w-full"
+                  disabled={isSubmitting}
                 >
-                  Sign In
+                  {isSubmitting ? "Signing in..." : "Sign In"}
                 </button>
 
               </form>
