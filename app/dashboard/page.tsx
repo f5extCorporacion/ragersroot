@@ -1,13 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import Image from "next/image";
-import { securityPages } from "../data/securityPages";
+import { securityPages, SecurityPage } from "../data/securityPages";
 import * as Icons from "react-icons/fa";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
-// Mapeo de iconos
-const iconMap: { [key: string]: any } = {
+// Tipos para DriveJS
+interface DriverStep {
+  element?: string;
+  popover?: {
+    title: string;
+    description: string;
+    position?: 'top' | 'bottom' | 'left' | 'right';
+    side?: 'top' | 'bottom' | 'left' | 'right';
+    align?: 'start' | 'center' | 'end';
+  };
+  onNext?: () => void;
+  onPrev?: () => void;
+}
+
+interface DriverConfig {
+  showProgress: boolean;
+  steps: DriverStep[];
+  onDestroyed?: () => void;
+  onNextClick?: () => void;
+  onPrevClick?: () => void;
+}
+
+// Mapeo de iconos con tipo
+type IconMap = {
+  [key: string]: React.ComponentType<any>;
+};
+
+const iconMap: IconMap = {
   FaServer: Icons.FaServer,
   FaShieldAlt: Icons.FaShieldAlt,
   FaGlobe: Icons.FaGlobe,
@@ -32,20 +60,113 @@ const iconMap: { [key: string]: any } = {
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isTourActive, setIsTourActive] = useState<boolean>(false);
+  const driverRef = useRef<any>(null);
   
-  // Estado para la paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage: number = 8;
 
   // Calcular índices para la paginación
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = securityPages.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(securityPages.length / itemsPerPage);
+  const indexOfLastItem: number = currentPage * itemsPerPage;
+  const indexOfFirstItem: number = indexOfLastItem - itemsPerPage;
+  const currentItems: SecurityPage[] = securityPages.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages: number = Math.ceil(securityPages.length / itemsPerPage);
 
   // Cambiar página
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number): void => setCurrentPage(pageNumber);
+
+  // Inicializar DriveJS
+  useEffect(() => {
+    if (user) {
+      // Definir los pasos del tour con tipos
+      const tourSteps: DriverStep[] = [
+        {
+          element: '#dashboard-logo',
+          popover: {
+            title: '🛡️ Bienvenido a RangersRoot',
+            description: 'Este es tu dashboard personal con recursos de seguridad informática.',
+            position: 'bottom',
+            side: 'bottom',
+            align: 'start'
+          }
+        },
+        {
+          element: '#resources-title',
+          popover: {
+            title: '📚 Recursos de Seguridad',
+            description: 'Aquí encontrarás 20 recursos curados sobre hacking ético, ciberseguridad y herramientas.',
+            position: 'bottom',
+            side: 'bottom'
+          }
+        },
+        {
+          element: '#cards-grid',
+          popover: {
+            title: '🎯 Tarjetas de Recursos',
+            description: 'Cada tarjeta muestra un recurso con su nombre, descripción y un ícono representativo.',
+            position: 'top',
+            side: 'top'
+          }
+        },
+        {
+          element: '.card:first-child',
+          popover: {
+            title: '📖 Detalles del Recurso',
+            description: 'Haz clic en cualquier tarjeta para visitar el recurso en una nueva pestaña.',
+            position: 'top',
+            side: 'top',
+            align: 'start'
+          }
+        },
+        {
+          element: '#pagination-controls',
+          popover: {
+            title: '📄 Paginación',
+            description: 'Navega entre las páginas para ver más recursos. Actualmente hay 20 recursos disponibles.',
+            position: 'top',
+            side: 'top'
+          }
+        },
+        {
+          element: '#user-profile',
+          popover: {
+            title: '👤 Tu Perfil',
+            description: `Hola ${user.name || 'Usuario'}, aquí puedes ver tu información y cerrar sesión.`,
+            position: 'bottom',
+            side: 'bottom',
+            align: 'end'
+          }
+        }
+      ];
+
+      // Configuración de DriveJS con tipos
+      const driverConfig: DriverConfig = {
+        showProgress: true,
+        steps: tourSteps,
+        onDestroyed: () => {
+          setIsTourActive(false);
+        }
+      };
+
+      // Inicializar driver
+      driverRef.current = driver(driverConfig);
+    }
+
+    return () => {
+      if (driverRef.current) {
+        driverRef.current.destroy();
+      }
+    };
+  }, [user]);
+
+  // Función para iniciar el tour con tipo
+  const startTour = (): void => {
+    if (driverRef.current && !isTourActive) {
+      setIsTourActive(true);
+      driverRef.current.drive();
+    }
+  };
 
   if (!user) return null;
 
@@ -77,11 +198,11 @@ export default function Dashboard() {
           ${isHovered ? 'w-auto min-w-[200px]' : 'w-0'}
         `}>
           <div className="p-4 w-[200px]">
-            <div className="mb-8 flex items-center gap-2 px-2">
+            <div id="dashboard-logo" className="mb-8 flex items-center gap-2 px-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-content font-bold">D</span>
+                <span className="text-primary-content font-bold">RR</span>
               </div>
-              <span className="text-xl font-bold">Dashboard</span>
+              <span className="text-xl font-bold">RangersRoot</span>
             </div>
 
             <ul className="menu gap-2">
@@ -110,12 +231,24 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="navbar bg-base-100 shadow-lg px-4 lg:px-6">
-          <div className="flex-1">
-            <a className="btn btn-ghost text-xl">RangersRoot</a>
+          <div className="flex-1 flex items-center gap-4">
+            <a className="btn btn-ghost text-xl" id="resources-title">RangersRoot</a>
+            
+            {/* Botón de Tour */}
+            <button
+              onClick={startTour}
+              disabled={isTourActive}
+              className="btn btn-ghost btn-sm gap-2 text-primary"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {isTourActive ? 'Tour en curso...' : '🎯 Ver tour'}
+            </button>
           </div>
           
           {/* Perfil de usuario */}
-          <div className="dropdown dropdown-end">
+          <div className="dropdown dropdown-end" id="user-profile">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full ring ring-primary ring-offset-2">
                 {user?.image ? (
@@ -155,8 +288,8 @@ export default function Dashboard() {
 
         {/* Contenido principal - Cards */}
         <main className="flex-1 p-6 bg-base-200 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {currentItems.map((page) => {
+          <div id="cards-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {currentItems.map((page: SecurityPage) => {
               const IconComponent = iconMap[page.icon];
               return (
                 <a
@@ -186,7 +319,7 @@ export default function Dashboard() {
           </div>
 
           {/* Paginación */}
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div id="pagination-controls" className="flex justify-center items-center gap-2 mt-8">
             <button
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
@@ -196,7 +329,7 @@ export default function Dashboard() {
             </button>
             
             <div className="flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+              {Array.from({ length: totalPages }, (_, i: number) => i + 1).map((number: number) => (
                 <button
                   key={number}
                   onClick={() => paginate(number)}
