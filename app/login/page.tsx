@@ -9,74 +9,132 @@ import { useSession } from "next-auth/react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
+// ============================================
+// TIPOS MANUALES PARA DRIVEJS
+// ============================================
+
+// Tipo para la posición del popover
+type DriverPosition = 'top' | 'bottom' | 'left' | 'right';
+type DriverAlign = 'start' | 'center' | 'end';
+
+// Interfaz para el popover
+interface DriverPopover {
+  title: string;
+  description: string;
+  position?: DriverPosition;
+  side?: DriverPosition;
+  align?: DriverAlign;
+}
+
+// Interfaz para cada paso del tour
+interface DriverStep {
+  element?: string;
+  popover?: DriverPopover;
+  onNext?: () => void;
+  onPrev?: () => void;
+}
+
+// Interfaz para la configuración de DriveJS
+interface DriverConfig {
+  showProgress: boolean;
+  steps: DriverStep[];
+  onDestroyed?: () => void;
+  onNextClick?: () => void;
+  onPrevClick?: () => void;
+  onHighlightStarted?: () => void;
+  onDeselected?: () => void;
+}
+
+// Interfaz para el objeto Driver
+interface DriverInstance {
+  drive: () => void;
+  destroy: () => void;
+  isActive: () => boolean;
+  setConfig: (config: Partial<DriverConfig>) => void;
+  moveNext: () => void;
+  movePrev: () => void;
+}
+
+// ============================================
+// COMPONENTE PRINCIPAL
+// ============================================
+
 export default function LoginPage() {
     const { data: session } = useSession();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isTourActive, setIsTourActive] = useState(false);
-    const driverRef = useRef<any>(null);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [isTourActive, setIsTourActive] = useState<boolean>(false);
+    const driverRef = useRef<DriverInstance | null>(null);
 
     // Inicializar DriveJS
     useEffect(() => {
-        driverRef.current = driver({
-            showProgress: true,
-            steps: [
-                {
-                    element: '#brand-logo',
-                    popover: {
-                        title: '🛡️ RangersRoot',
-                        description: 'Bienvenido a la plataforma de seguridad informática y hacking ético.',
-                        position: 'bottom',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#login-title',
-                    popover: {
-                        title: '🔐 Acceso Seguro',
-                        description: 'Para acceder al contenido exclusivo de seguridad, necesitas iniciar sesión.',
-                        position: 'bottom',
-                        side: 'bottom'
-                    }
-                },
-                {
-                    element: '#google-login-btn',
-                    popover: {
-                        title: '🚀 Login con Google',
-                        description: 'Haz clic aquí para iniciar sesión con tu cuenta de Google. Es rápido, seguro y no necesitas crear una contraseña nueva.',
-                        position: 'bottom',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#tour-info',
-                    popover: {
-                        title: '📋 ¿Qué obtienes?',
-                        description: 'Acceso a recursos exclusivos de seguridad, tutoriales, herramientas y una comunidad de expertos.',
-                        position: 'top',
-                        side: 'top'
-                    }
-                },
-                {
-                    element: '#tour-cta',
-                    popover: {
-                        title: '🎯 ¡Comienza ahora!',
-                        description: 'Haz clic en "Continuar con Google" y únete a la comunidad RangersRoot.',
-                        position: 'top',
-                        side: 'top',
-                        align: 'end'
-                    }
+        // Definir los pasos del tour con tipos
+        const tourSteps: DriverStep[] = [
+            {
+                element: '#brand-logo',
+                popover: {
+                    title: '🛡️ RangersRoot',
+                    description: 'Bienvenido a la plataforma de seguridad informática y hacking ético.',
+                    position: 'bottom',
+                    side: 'bottom',
+                    align: 'start'
                 }
-            ],
+            },
+            {
+                element: '#login-title',
+                popover: {
+                    title: '🔐 Acceso Seguro',
+                    description: 'Para acceder al contenido exclusivo de seguridad, necesitas iniciar sesión.',
+                    position: 'bottom',
+                    side: 'bottom'
+                }
+            },
+            {
+                element: '#google-login-btn',
+                popover: {
+                    title: '🚀 Login con Google',
+                    description: 'Haz clic aquí para iniciar sesión con tu cuenta de Google. Es rápido, seguro y no necesitas crear una contraseña nueva.',
+                    position: 'bottom',
+                    side: 'bottom',
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-info',
+                popover: {
+                    title: '📋 ¿Qué obtienes?',
+                    description: 'Acceso a recursos exclusivos de seguridad, tutoriales, herramientas y una comunidad de expertos.',
+                    position: 'top',
+                    side: 'top'
+                }
+            },
+            {
+                element: '#tour-cta',
+                popover: {
+                    title: '🎯 ¡Comienza ahora!',
+                    description: 'Haz clic en "Continuar con Google" y únete a la comunidad RangersRoot.',
+                    position: 'top',
+                    side: 'top',
+                    align: 'end'
+                }
+            }
+        ];
+
+        // Configuración con tipos
+        const driverConfig: DriverConfig = {
+            showProgress: true,
+            steps: tourSteps,
             onDestroyed: () => {
                 setIsTourActive(false);
             }
-        });
+        };
 
+        // Inicializar driver con los tipos
+        driverRef.current = driver(driverConfig) as DriverInstance;
+
+        // Cleanup
         return () => {
             if (driverRef.current) {
                 driverRef.current.destroy();
@@ -84,14 +142,16 @@ export default function LoginPage() {
         };
     }, []);
 
-    const startTour = () => {
-        if (driverRef.current) {
+    // Función para iniciar el tour con tipos
+    const startTour = (): void => {
+        if (driverRef.current && !isTourActive) {
             setIsTourActive(true);
             driverRef.current.drive();
         }
     };
 
-    const handleEmailLogin = async (e: React.FormEvent) => {
+    // Función para manejar el login con email
+    const handleEmailLogin = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         setError(null);
         setIsSubmitting(true);
@@ -110,6 +170,7 @@ export default function LoginPage() {
         }
     };
 
+    // Si no hay sesión, mostrar el login
     if (!session) return (
         <div className="relative min-h-screen bg-base-200">
             {/* Navbar */}
@@ -209,7 +270,7 @@ export default function LoginPage() {
                                 <button
                                     onClick={startTour}
                                     disabled={isTourActive}
-                                    className="btn bg-amber-200 btn-sm gap-2 text-primary"
+                                    className="btn btn-ghost btn-sm gap-2 text-primary"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -258,96 +319,13 @@ export default function LoginPage() {
                                     </div>
                                 </div>
                             </div>
-{/*
-              <form className="space-y-4" onSubmit={handleEmailLogin}>
 
-                {error && (
-                  <div className="alert alert-error text-sm py-2">
-                    {error}
-                  </div>
-                )}
-
-                <div>
-                  <label className="label">
-                    <span className="label-text">
-                      Email
-                    </span>
-                  </label>
-
-                  <input
-                    type="email"
-                    placeholder="correo@empresa.com"
-                    className="input input-bordered w-full"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                            {/* Formulario de credenciales comentado */}
+                            {/* ... */}
+                        </div>
+                    </div>
                 </div>
-
-                <div>
-                  <label className="label">
-                    <span className="label-text">
-                      Password
-                    </span>
-                  </label>
-
-                  <input
-                    type="password"
-                    placeholder="********"
-                    className="input input-bordered w-full"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-between items-center">
-
-                  <label className="label cursor-pointer gap-2">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm"
-                    />
-                    <span className="label-text">
-                      Remember me
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    className="link link-primary"
-                  >
-                    Forgot password?
-                  </button>
-
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Signing in..." : "Sign In"}
-                </button>
-
-              </form>
-
-              <p className="text-center mt-6">
-                Don&apos;t have an account?{" "}
-                <button
-                  type="button"
-                  className="link link-primary"
-                >
-                  Sign Up
-                </button>
-              </p>
-*/}
-            </div>
-          </div>
-
+            </main>
         </div>
-      </main>
-
-    </div>
-  );
+    );
 }
