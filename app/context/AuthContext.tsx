@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import {
+  SessionProvider,
   signIn,
   signOut,
   useSession,
@@ -87,7 +88,9 @@ export function AuthProvider({
         logout,
       }}
     >
+      <SessionProvider>
       {children}
+      </SessionProvider>
     </AuthContext.Provider>
   );
 }

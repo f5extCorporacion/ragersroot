@@ -3,10 +3,49 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Image from "next/image";
+import { securityPages } from "../data/securityPages";
+import * as Icons from "react-icons/fa";
+
+// Mapeo de iconos
+const iconMap: { [key: string]: any } = {
+  FaServer: Icons.FaServer,
+  FaShieldAlt: Icons.FaShieldAlt,
+  FaGlobe: Icons.FaGlobe,
+  FaLinux: Icons.FaLinux,
+  FaCode: Icons.FaCode,
+  FaNetworkWired: Icons.FaNetworkWired,
+  FaBug: Icons.FaBug,
+  FaSearch: Icons.FaSearch,
+  FaPodcast: Icons.FaPodcast,
+  FaNewspaper: Icons.FaNewspaper,
+  FaBook: Icons.FaBook,
+  FaMap: Icons.FaMap,
+  FaEye: Icons.FaEye,
+  FaUsers: Icons.FaUsers,
+  FaSkull: Icons.FaSkull,
+  FaHatCowboy: Icons.FaHatCowboy,
+  FaGraduationCap: Icons.FaGraduationCap,
+  FaDownload: Icons.FaDownload,
+  FaDatabase: Icons.FaDatabase,
+  FaTrophy: Icons.FaTrophy,
+};
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Estado para la paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Calcular índices para la paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = securityPages.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(securityPages.length / itemsPerPage);
+
+  // Cambiar página
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   if (!user) return null;
 
@@ -38,7 +77,6 @@ export default function Dashboard() {
           ${isHovered ? 'w-auto min-w-[200px]' : 'w-0'}
         `}>
           <div className="p-4 w-[200px]">
-            {/* Logo o título del menú */}
             <div className="mb-8 flex items-center gap-2 px-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-content font-bold">D</span>
@@ -46,7 +84,6 @@ export default function Dashboard() {
               <span className="text-xl font-bold">Dashboard</span>
             </div>
 
-            {/* Opciones del menú */}
             <ul className="menu gap-2">
               <li>
                 <a className="hover:bg-primary hover:text-primary-content transition-colors rounded-lg">
@@ -61,7 +98,7 @@ export default function Dashboard() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  Estadísticas
+                  Recursos
                 </a>
               </li>
             </ul>
@@ -74,7 +111,7 @@ export default function Dashboard() {
         {/* Header */}
         <header className="navbar bg-base-100 shadow-lg px-4 lg:px-6">
           <div className="flex-1">
-            <a className="btn btn-ghost text-xl">Mi Dashboard</a>
+            <a className="btn btn-ghost text-xl">RangersRoot</a>
           </div>
           
           {/* Perfil de usuario */}
@@ -116,19 +153,75 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Contenido principal */}
-        <main className="flex-1 p-6 bg-base-200">
-          <div className="hero min-h-[calc(100vh-80px)] bg-base-100 rounded-xl shadow-lg">
-            <div className="hero-content text-center">
-              <div className="max-w-md">
-                <h1 className="text-4xl font-bold text-primary mb-4">
-                  ¡Hola bienvenido! 👋
-                </h1>
-                <p className="text-lg text-base-content/70">
-                  {user?.name}, estamos felices de tenerte aquí.
-                </p>
-              </div>
+        {/* Contenido principal - Cards */}
+        <main className="flex-1 p-6 bg-base-200 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {currentItems.map((page) => {
+              const IconComponent = iconMap[page.icon];
+              return (
+                <a
+                  key={page.id}
+                  href={page.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]"
+                >
+                  <div className="card-body">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-2xl">
+                        {IconComponent && <IconComponent />}
+                      </div>
+                      <h2 className="card-title text-lg">{page.name}</h2>
+                    </div>
+                    <p className="text-sm text-base-content/70 line-clamp-3">
+                      {page.detail}
+                    </p>
+                    <div className="card-actions justify-end mt-2">
+                      <div className="badge badge-primary badge-sm">Visitar</div>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+
+          {/* Paginación */}
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="btn btn-sm btn-ghost"
+            >
+              Anterior
+            </button>
+            
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`btn btn-sm ${
+                    currentPage === number
+                      ? 'btn-primary'
+                      : 'btn-ghost'
+                  }`}
+                >
+                  {number}
+                </button>
+              ))}
             </div>
+
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="btn btn-sm btn-ghost"
+            >
+              Siguiente
+            </button>
+          </div>
+
+          <div className="text-center mt-4 text-sm text-base-content/50">
+            Mostrando {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, securityPages.length)} de {securityPages.length} recursos
           </div>
         </main>
       </div>

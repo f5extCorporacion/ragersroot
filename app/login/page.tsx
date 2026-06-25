@@ -1,151 +1,264 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaGithub, FaGoogle } from "react-icons/fa";
 import HeaderMenu from "../header";
 import MagicRings from "../component/MagicRings";
 import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 export default function LoginPage() {
     const { data: session } = useSession();
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isTourActive, setIsTourActive] = useState(false);
+    const driverRef = useRef<any>(null);
 
-    const handleEmailLogin = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      setIsSubmitting(true);
+    // Inicializar DriveJS
+    useEffect(() => {
+        driverRef.current = driver({
+            showProgress: true,
+            steps: [
+                {
+                    element: '#brand-logo',
+                    popover: {
+                        title: '🛡️ RangersRoot',
+                        description: 'Bienvenido a la plataforma de seguridad informática y hacking ético.',
+                        position: 'bottom',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#login-title',
+                    popover: {
+                        title: '🔐 Acceso Seguro',
+                        description: 'Para acceder al contenido exclusivo de seguridad, necesitas iniciar sesión.',
+                        position: 'bottom',
+                        side: 'bottom'
+                    }
+                },
+                {
+                    element: '#google-login-btn',
+                    popover: {
+                        title: '🚀 Login con Google',
+                        description: 'Haz clic aquí para iniciar sesión con tu cuenta de Google. Es rápido, seguro y no necesitas crear una contraseña nueva.',
+                        position: 'bottom',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-info',
+                    popover: {
+                        title: '📋 ¿Qué obtienes?',
+                        description: 'Acceso a recursos exclusivos de seguridad, tutoriales, herramientas y una comunidad de expertos.',
+                        position: 'top',
+                        side: 'top'
+                    }
+                },
+                {
+                    element: '#tour-cta',
+                    popover: {
+                        title: '🎯 ¡Comienza ahora!',
+                        description: 'Haz clic en "Continuar con Google" y únete a la comunidad RangersRoot.',
+                        position: 'top',
+                        side: 'top',
+                        align: 'end'
+                    }
+                }
+            ],
+            onDestroyed: () => {
+                setIsTourActive(false);
+            }
+        });
 
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+        return () => {
+            if (driverRef.current) {
+                driverRef.current.destroy();
+            }
+        };
+    }, []);
 
-      setIsSubmitting(false);
-
-      if (!res || res.error) {
-        setError("Email o contraseña incorrectos");
-        return;
-      }
-
-      // Sesión creada correctamente. El AuthProvider (AuthContext) redirige
-      // a /dashboard automáticamente cuando detecta `authenticated === true`.
+    const startTour = () => {
+        if (driverRef.current) {
+            setIsTourActive(true);
+            driverRef.current.drive();
+        }
     };
 
-  if (!session) return (
-    <div className="relative min-h-screen bg-base-200">
+    const handleEmailLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setIsSubmitting(true);
 
-      {/* Fondo */}
-  
+        const res = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+        });
 
-      {/* Navbar */}
-      <header className="sticky top-0 z-[9999]">
-        <HeaderMenu />
-      </header>
+        setIsSubmitting(false);
 
-      {/* Contenido */}
-      <main className="relative z-10 flex items-center justify-center p-6 min-h-[calc(100vh-80px)]">
-              <MagicRings
-          color="#A855F7"
-          colorTwo="#6366F1"
-          ringCount={6}
-          speed={1}
-          attenuation={10}
-          lineThickness={2}
-          baseRadius={0.35}
-          radiusStep={0.1}
-          scaleRate={0.1}
-          opacity={1}
-          blur={0}
-          noiseAmount={0.1}
-          rotation={0}
-          ringGap={1.5}
-          fadeIn={0.7}
-          fadeOut={0.5}
-          followMouse={false}
-          mouseInfluence={0.2}
-          hoverScale={1.2}
-          parallax={0.05}
-          clickBurst={false}
-        />
-        <div className="card lg:card-side bg-base-/50 backdrop-blur-md shadow-2xl w-full max-w-6xl overflow-hidden">
+        if (!res || res.error) {
+            setError("Email o contraseña incorrectos");
+            return;
+        }
+    };
 
-          {/* Left Side */}
-          <div className=" bg-base-100/50 text-neutral-content lg:w-1/2 p-10 flex flex-col justify-between">
-          
-            <div>
+    if (!session) return (
+        <div className="relative min-h-screen bg-base-200">
+            {/* Navbar */}
+            <header className="sticky top-0 z-[9999]">
+                <HeaderMenu />
+            </header>
 
-              <div className="avatar placeholder mb-6">
-                    <div className="fixed inset-0 z-0 pointer-events-none">
-       
-      </div>
-                <div className="bg-primary-100/50 text-primary-content rounded-xl w-14">
-            
-                  <span className="text-xl font-bold">
-                RR
-                  </span>
-                </div>
-              </div>
-
-              <h1 className="text-4xl font-bold leading-tight">
-               
-      
-              </h1>
-
-              <p className="mt-4 opacity-80">
-                Connect analytics, monitor events and visualize metrics
-                from a single dashboard.
-              </p>
-            </div>
-
-            <div className="stats bg-base-100 text-base-content shadow mt-8">
-              <div className="stat">
-                <div className="stat-title">
-                  Active Users
-                </div>
-
-                <div className="stat-value">
-                  1,245
-                </div>
-
-                <div className="stat-desc">
-                  ↗︎ 12% this month
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Side */}
-          <div className="card-body lg:w-1/2 p-10">
-            <div className="max-w-md mx-auto w-full">
-
-              <h2 className="text-3xl font-bold">
-                Sign In
-              </h2>
-
-              <p className="text-base-content/70 mt-2">
-                Welcome back! Please enter your details.
-              </p>
-
-              <div className="grid gap-3 mt-8">
+            {/* Contenido */}
+            <main className="relative z-10 flex items-center justify-center p-6 min-h-[calc(100vh-80px)]">
+                <MagicRings
+                    color="#A855F7"
+                    colorTwo="#6366F1"
+                    ringCount={6}
+                    speed={1}
+                    attenuation={10}
+                    lineThickness={2}
+                    baseRadius={0.35}
+                    radiusStep={0.1}
+                    scaleRate={0.1}
+                    opacity={1}
+                    blur={0}
+                    noiseAmount={0.1}
+                    rotation={0}
+                    ringGap={1.5}
+                    fadeIn={0.7}
+                    fadeOut={0.5}
+                    followMouse={false}
+                    mouseInfluence={0.2}
+                    hoverScale={1.2}
+                    parallax={0.05}
+                    clickBurst={false}
+                />
                 
-                <button className="btn btn-outline" 
-                onClick={() => signIn("google")}>
-                  <FaGoogle />
-                  Continue with Google
-                </button>
-              </div>
+                <div className="card lg:card-side bg-base-100/50 backdrop-blur-md shadow-2xl w-full max-w-6xl overflow-hidden">
+                    {/* Left Side */}
+                    <div className="bg-base-100/50 text-neutral-content lg:w-1/2 p-10 flex flex-col justify-between">
+                        <div>
+                            {/* Logo con ID para el tour */}
+                            <div className="avatar placeholder mb-6" id="brand-logo">
+                                <div className="bg-gradient-to-br from-primary to-secondary text-primary-content rounded-xl w-16 h-16 flex items-center justify-center shadow-lg shadow-primary/20">
+                                    <span className="text-2xl font-bold">RR</span>
+                                </div>
+                            </div>
 
-              <div className="divider">
-                OR CONTINUE WITH EMAIL
-              </div>
+                            <h1 className="text-4xl font-bold leading-tight" id="login-title">
+                                🔐 Seguridad<br />
+                                <span className="text-primary">Informática</span>
+                            </h1>
 
+                            <p className="mt-4 opacity-80 leading-relaxed">
+                                Accede a recursos exclusivos de <span className="text-primary font-semibold">hacking ético</span>, 
+                                <span className="text-secondary font-semibold"> ciberseguridad</span> y 
+                                <span className="text-accent font-semibold"> desarrollo de software</span>.
+                            </p>
+
+                            {/* Información del tour */}
+                            <div id="tour-info" className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                                        🎯
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium">Contenido exclusivo para miembros</p>
+                                        <p className="text-xs opacity-70">Tutoriales · Herramientas · Comunidad</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stats bg-base-100/50 text-base-content shadow mt-8">
+                            <div className="stat">
+                                <div className="stat-title">Recursos</div>
+                                <div className="stat-value">20+</div>
+                                <div className="stat-desc">↗︎ En crecimiento constante</div>
+                            </div>
+                            <div className="stat">
+                                <div className="stat-title">Miembros</div>
+                                <div className="stat-value">1.2K</div>
+                                <div className="stat-desc">↗︎ Comunidad activa</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Side */}
+                    <div className="card-body lg:w-1/2 p-10">
+                        <div className="max-w-md mx-auto w-full">
+                            <h2 className="text-3xl font-bold" id="tour-cta">
+                                Iniciar Sesión
+                            </h2>
+
+                            <p className="text-base-content/70 mt-2">
+                                Únete a la comunidad RangersRoot
+                            </p>
+
+                            {/* Botón de Tour */}
+                            <div className="mt-4">
+                                <button
+                                    onClick={startTour}
+                                    disabled={isTourActive}
+                                    className="btn bg-amber-200 btn-sm gap-2 text-primary"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {isTourActive ? 'Tour en curso...' : '🎯 Ver tour guiado'}
+                                </button>
+                            </div>
+
+                            <div className="grid gap-3 mt-4">
+                                {/* Botón de Google con ID para el tour */}
+                                <button
+                                    id="google-login-btn"
+                                    className="btn btn-outline gap-2 hover:bg-primary hover:text-primary-content transition-all"
+                                    onClick={() => signIn("google")}
+                                >
+                                    <FaGoogle className="text-xl" />
+                                    Continuar con Google
+                                </button>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-base-300"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-xs uppercase">
+                                        <span className="bg-base-100 px-2 text-base-content/50">
+                                            Reconocimiento a frutinodev
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mensaje adicional sobre el login */}
+                            <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-green-500 text-sm">✓</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-primary">
+                                            Login con Google disponible
+                                        </p>
+                                        <p className="text-xs text-base-content/60 mt-1">
+                                            Haz clic en el botón de Google para acceder instantáneamente. 
+                                            No necesitas crear una cuenta nueva.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+{/*
               <form className="space-y-4" onSubmit={handleEmailLogin}>
 
                 {error && (
@@ -228,7 +341,7 @@ export default function LoginPage() {
                   Sign Up
                 </button>
               </p>
-
+*/}
             </div>
           </div>
 
